@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                         latitude = gpsTracker.getLocation().getLatitude();
                         longitude = gpsTracker.getLocation().getLongitude();
                         myLocationMarker.setPosition(new LatLng(latitude, longitude));
-                        myLocationMarker.
+                        //myLocationMarker.
                         Toast.makeText(MainActivity.this, "latitude:"+gpsTracker.getLocation().getLatitude(), Toast.LENGTH_SHORT).show();
                     }
                 });
