@@ -35,9 +35,9 @@ public class GPSTracker implements LocationListener {
     public GPSTracker(Context context) {
         this.mContext = context;
         m_Location = getLocation();
-        System.out.println("location Latitude:" + m_Location.getLatitude());
+        /*System.out.println("location Latitude:" + m_Location.getLatitude());
         System.out.println("location Longitude:" + m_Location.getLongitude());
-        System.out.println("getLocation():" + getLocation());
+        System.out.println("getLocation():" + getLocation());*/
     }
 
     public Location getLocation() {

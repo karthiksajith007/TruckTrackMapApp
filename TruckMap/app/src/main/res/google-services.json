@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "599484622150",
+    "firebase_url": "https://truckmap-189505.firebaseio.com",
+    "project_id": "truckmap-189505",
+    "storage_bucket": "truckmap-189505.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599484622150:android:489ca48aa9075e42",
+        "android_client_info": {
+          "package_name": "code.truckmap.com.truckmap"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "599484622150-h1unh44pl8ekv35n6e84jh1lorsmpehf.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "599484622150-ma8b6oknm5eokp5on2tsfqtp6lark789.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwx09fRxa_mmQ1wuwfo1IJ2FHpqqYVNhQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
