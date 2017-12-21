@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements TaskScheduler.ITa
         getMapView ().getMapAsync(this);
         gpsTracker = new GPSTracker(this);
         handler = new Handler();
-        taskScheduler = new TaskScheduler(this, 5000, 0);
+        taskScheduler = new TaskScheduler(this, 10000, 0);
         if (checkLocationPermissionAndRequestIfNot()) {
             taskScheduler.startScheduler();
         }
