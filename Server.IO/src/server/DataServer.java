@@ -9,16 +9,9 @@ import java.util.Date;
 
 public class DataServer {
 	
-	interface IDataServer {
-		boolean onDataReceived (String data);
-	}
-	
-	private IDataServer interfaceServer;
-	
 	private ServerSocket serverSocket;
 	
-	public DataServer (IDataServer interfaceServer) {
-		this.interfaceServer = interfaceServer;
+	public DataServer () {
 	}
 
 	public void startServer (int portNumber) {
@@ -26,22 +19,25 @@ public class DataServer {
         try {
         	serverSocket = new ServerSocket(portNumber);
         	System.out.println("Socket is listning to port "+portNumber);
-        	
-            while (true) {
-                Socket socket = serverSocket.accept();
-                try {
-                	String data = getData (socket);
-                	System.out.println("data from client="+data);
-                	
-                	if (interfaceServer.onDataReceived(data)) {
-                		writeResponse (socket.getOutputStream());	
-                	} else {
-                		System.out.println("Auth rejected from client.");	
-                	}
-                } finally {
-                    //socket.close();
-                }
-            }
+
+        	while (true) {
+        		System.out.println("Waiting for client...");
+	            Socket socket = serverSocket.accept();
+            	System.out.println("Client connected.");
+	            while (true) {
+	                try {
+	                	String data = getData (socket);
+	                	if (data == null) {
+	                		socket.close();
+	                		break;
+	                	}
+	                	System.out.println("data from client="+data);                	
+	                	writeResponse (socket.getOutputStream());
+	                } catch (Exception exception) {
+	                	break;
+	                }
+	            }
+        	}
         } catch (Exception exception) {
         	exception.printStackTrace();
         } finally {
@@ -66,6 +62,9 @@ public class DataServer {
 	private String getData (Socket socket) throws IOException {
 		byte []dataBytes = new byte [1024];
     	socket.getInputStream().read(dataBytes);
+    	if (dataBytes.length == 0) {
+    		return null;
+    	}
     	return new String (dataBytes);
 	}
 	private void writeResponse (OutputStream outputStream) {

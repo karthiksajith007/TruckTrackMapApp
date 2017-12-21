@@ -1,5 +1,7 @@
 package code.truckmap.com.truckmap;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,5 +32,23 @@ public class JSonLogics {
             }
         }
         return jsonObject;
+    }
+
+    public static boolean isResponseAuthValid (JSONObject jsonObject) {
+        boolean isValid;
+        //{"data":{"car_id":1,"driver_id":100,"order":1,"status":"READY","uid":"some string"},"status":true}
+        try {
+            String statusString = jsonObject.getJSONObject("data").getString("status");
+            if (statusString.equals("READY")) {
+                isValid = true;
+            } else {
+                isValid = false;
+            }
+            Log.i("HttpClient", "statusString="+statusString);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            isValid = false;
+        }
+        return isValid;
     }
 }

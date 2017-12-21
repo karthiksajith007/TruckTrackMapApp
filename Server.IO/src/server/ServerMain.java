@@ -1,18 +1,11 @@
 package server;
 
-import server.DataServer.IDataServer;
-
-public class ServerMain implements IDataServer {
+public class ServerMain {
 	
 	private final int portNumber = 9090;
 	
 	public ServerMain () {
-		new DataServer (this).startServer(portNumber);
-	}
-
-	@Override
-	public boolean onDataReceived(String data) {
-		return true;
+		new DataServer ().startServer(portNumber);
 	}
 
 	public static void main (String args[]) {		

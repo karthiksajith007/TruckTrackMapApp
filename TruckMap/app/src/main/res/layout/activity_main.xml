@@ -13,6 +13,12 @@
     tools:context="code.truckmap.com.truckmap.MainActivity">
 
     <TextView
+        android:id="@+id/userAuthStatusTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="User auth status: Unavailable." />
+
+    <TextView
         android:id="@+id/networkConnectionStatusTextview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

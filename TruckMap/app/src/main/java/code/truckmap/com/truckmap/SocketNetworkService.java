@@ -13,7 +13,7 @@ import java.net.Socket;
  * Created by karthik on 12/20/2017.
  */
 
-public class SocketNetworkService implements Runnable /*TaskScheduler.ITaskScheduler*/{
+public class SocketNetworkService /*implements TaskScheduler.ITaskScheduler*/{
 
     /*public interface ISocketNetworkService {
         void onConnectionUpdateStatus (SocketNetworkConnectionStatus socketNetworkConnectionStatus);
@@ -26,32 +26,16 @@ public class SocketNetworkService implements Runnable /*TaskScheduler.ITaskSched
     private int port;
 
     private boolean isConnecting;
-    private boolean isPinging;
+    private boolean isConnected;
     //private TaskScheduler taskScheduler;
-    private Thread pingThread;
 
     public SocketNetworkService(String ipAddr, int port) {
         this.ipAddr = ipAddr;
         this.port = port;
         isConnecting = false;
-        pingThread = new Thread (this);
-        pingThread.start();
+        isConnected = false;
         /*taskScheduler = new TaskScheduler(this, 500, 0);
         taskScheduler.startScheduler();*/
-    }
-
-
-
-    @Override
-    public void run() {
-        while (!pingThread.isInterrupted()) {
-            sendData("PingRinging");
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
     /*@Override
     synchronized public void onScheduledTask(long scheduleID) {
@@ -69,7 +53,8 @@ public class SocketNetworkService implements Runnable /*TaskScheduler.ITaskSched
         }
     }*/
 
-    public void openConnection () {
+    synchronized public void openConnection () {
+        isConnected = false;
         if (!isConnecting) {
             new Thread(new Runnable() {
                 @Override
@@ -77,7 +62,9 @@ public class SocketNetworkService implements Runnable /*TaskScheduler.ITaskSched
                     isConnecting = true;
                     try {
                         socket = new Socket(ipAddr, port);
+                        isConnected = true;
                     } catch (IOException e) {
+                        isConnected = false;
                         e.printStackTrace();
                     }
                     isConnecting = false;
@@ -93,7 +80,7 @@ public class SocketNetworkService implements Runnable /*TaskScheduler.ITaskSched
                 socket.close();
             }
             //taskScheduler.stopScheduler();
-            pingThread.interrupt();
+            isConnected = false;
             isSuccess = true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -105,30 +92,35 @@ public class SocketNetworkService implements Runnable /*TaskScheduler.ITaskSched
     public String sendData (double latitude, double longitude) {
         return sendData (latitude+","+longitude);
     }
+
     public String sendData (JSONObject jsonObject) {
         return sendData (jsonObject.toString());
     }
+
     synchronized public String sendData (String stringData) {
         String answer;
         try {
-            if (socket!=null && socket.isConnected()) {
+            if (socket!=null) {
                 socket.getOutputStream().write(stringData.getBytes());
                 BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 answer = input.readLine();
+                isConnected = true;
             } else {
                 answer = null;
+                isConnected = false;
             }
         } catch (Exception exception) {
             Log.i ("response", "ip="+ipAddr+":"+ port);
             exception.printStackTrace();
             answer = null;
+            isConnected = false;
         }
         return answer;
     }
 
     public boolean getIsConnected () {
         boolean isConnected = false;
-        if (socket!=null && socket.isConnected()) {
+        if (socket!=null && socket.isConnected() && this.isConnected) {
             isConnected = true;
         }
         return isConnected;

@@ -31,16 +31,19 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONObject;
 
-public class MainActivity extends AppCompatActivity implements TaskScheduler.ITaskScheduler/*, SocketNetworkService.ISocketNetworkService*/, OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements TaskScheduler.ITaskScheduler, HttpRequestThread.IHttpRequestThread/*, SocketNetworkService.ISocketNetworkService*/, OnMapReadyCallback {
 
     private GPSTracker gpsTracker;
 
     private Handler handler;
     private TaskScheduler taskScheduler;
 
+    private enum UserAuthStatus {Valid, InValid, Requesting, NotAvailable};
+
     private Marker currentLocationMarker;
     private GoogleMap googleMap;
     private LatLng updatedLatLng;
+    private UserAuthStatus userAuthStatus;
 
     public final int LOCATION_PERMISSION_REQUEST = 999;
 
@@ -52,19 +55,35 @@ public class MainActivity extends AppCompatActivity implements TaskScheduler.ITa
         setContentView(R.layout.activity_main);
         getMapView ().onCreate(savedInstanceState);
         getMapView ().getMapAsync(this);
-        networkService = new SocketNetworkService("107.108.32.116", 9090);
-        networkService.openConnection();
         gpsTracker = new GPSTracker(this);
         handler = new Handler();
         taskScheduler = new TaskScheduler(this, 5000, 0);
         if (checkLocationPermissionAndRequestIfNot()) {
             taskScheduler.startScheduler();
         }
+        userAuthStatus = UserAuthStatus.Requesting;
+        networkService = new SocketNetworkService("107.108.32.116", 9090);
+        new HttpRequestThread (this, "http://107.108.32.116:8080/TruckServer/authrequest.json", 0).doRequestAsync();
+
+        updateUserStatus ();
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
+    }
+
+    @Override
+    public void onHttpResponse(JSONObject responseJson, int requestID) {
+        if (responseJson == null) {
+            userAuthStatus = UserAuthStatus.NotAvailable;
+        } else if (JSonLogics.isResponseAuthValid(responseJson)) {
+            userAuthStatus = UserAuthStatus.Valid;
+            networkService.openConnection();
+        } else {
+            userAuthStatus = UserAuthStatus.InValid;
+        }
+        updateUserStatus ();
     }
 
     @Override
@@ -85,19 +104,21 @@ public class MainActivity extends AppCompatActivity implements TaskScheduler.ITa
             }
         });
         if (updatedLatLng != null) {
-            if (networkService.getIsConnected()) {
-                JSONObject jsonObject = JSonLogics.getJSonObjectForItems(new JSonLogics.JSonItem("latitude", String.valueOf(updatedLatLng.latitude)),
-                                                                            new JSonLogics.JSonItem("longitude", String.valueOf(updatedLatLng.longitude)),
-                                                                               new JSonLogics.JSonItem("status_car", "READY"));
-                if (jsonObject != null) {
-                    String response = networkService.sendData(jsonObject);
-                    Log.i("response", "response=" + response);
+            if (userAuthStatus == UserAuthStatus.Valid) {
+                if (networkService!=null && networkService.getIsConnected()) {
+                    JSONObject jsonObject = JSonLogics.getJSonObjectForItems(new JSonLogics.JSonItem("latitude", String.valueOf(updatedLatLng.latitude)),
+                            new JSonLogics.JSonItem("longitude", String.valueOf(updatedLatLng.longitude)),
+                            new JSonLogics.JSonItem("status_car", "READY"));
+                    if (jsonObject != null) {
+                        String response = networkService.sendData(jsonObject);
+                        Log.i("response", "response=" + response);
+                    }
                 }
+                if (networkService!=null && !networkService.getIsConnected()) {
+                    networkService.openConnection();
+                }
+                updateNetworkStatus();
             }
-            if (!networkService.getIsConnected()) {
-                networkService.openConnection();
-            }
-            updateNetworkStatus ();
         }
     }
 
@@ -143,6 +164,7 @@ public class MainActivity extends AppCompatActivity implements TaskScheduler.ITa
     @Override
     public void onDestroy() {
         super.onDestroy();
+        networkService.closeConnection();
         getMapView ().onDestroy();
         taskScheduler.stopScheduler();
         gpsTracker.stopUsingGPS();
@@ -157,6 +179,25 @@ public class MainActivity extends AppCompatActivity implements TaskScheduler.ITa
         }
         currentLocationMarker.setPosition(latLng);
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+    }
+
+    private void updateUserStatus () {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (userAuthStatus == UserAuthStatus.Valid) {
+                    geUuserAuthStatusTextView ().setText("User auth status: Valid.");
+                } else if (userAuthStatus == UserAuthStatus.InValid) {
+                    geUuserAuthStatusTextView ().setText("User auth status: Invalid.");
+                } else if (userAuthStatus == UserAuthStatus.Requesting) {
+                    geUuserAuthStatusTextView ().setText("User auth status: Requesting.");
+                } else if (userAuthStatus == UserAuthStatus.NotAvailable) {
+                    geUuserAuthStatusTextView ().setText("User auth status: Not available.");
+                } else {
+                    geUuserAuthStatusTextView ().setText("User auth status: Unknown.");
+                }
+            }
+        });
     }
 
     private void updateNetworkStatus () {
@@ -191,5 +232,8 @@ public class MainActivity extends AppCompatActivity implements TaskScheduler.ITa
     }
     private TextView getNetworkConnectionStatusTextview () {
         return (TextView)findViewById(R.id.networkConnectionStatusTextview);
+    }
+    private TextView geUuserAuthStatusTextView () {
+        return (TextView)findViewById(R.id.userAuthStatusTextView);
     }
 }
