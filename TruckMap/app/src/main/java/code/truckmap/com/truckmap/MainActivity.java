@@ -179,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements TaskScheduler.ITa
         }
         currentLocationMarker.setPosition(latLng);
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo (17.0f));
     }
 
     private void updateUserStatus () {
